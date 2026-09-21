@@ -6,9 +6,46 @@ do215_events <- read_csv(
   show_col_types = FALSE
 )
 
-view(do215_events)
-dim(do215_events)
-names(do215_events)
+# -----------------------------------------
+# Adjust category names
+# -----------------------------------------
+
+do215_events <- do215_events |>
+  mutate(
+    category = case_when(
+      
+      category == "music" ~
+        "Live Music",
+      
+      category == "comedy" ~
+        "Comedy",
+      
+      category == "food-drink" ~
+        "Food & Drink",
+      
+      category == "dj-parties" ~
+        "DJ Parties",
+      
+      category == "arts-culture" ~
+        "Arts & Culture",
+      
+      category %in% c("outdoors", "sports","sports-fitness")  ~
+        "Sports & Fitness",
+      
+      category == "film" ~
+        "Film",
+      
+      category %in% c("family-kids", "arts-family") ~
+        "Family & Kids",
+      
+      
+      category == "theatre-performing-arts" ~
+        "Theatre & Performing Arts",
+      
+      TRUE ~
+        "Other"
+    )
+  )
 
 do215_events <- do215_events %>%
   mutate(
@@ -73,6 +110,9 @@ top_10_events <- do215_events %>%
 
 top_10_events
 
+
+
+#————————————————————————————————————————————————
 #analyze the category distribution
 category_summary <- do215_events %>%
   group_by(category) %>%
@@ -89,6 +129,8 @@ category_summary <- do215_events %>%
 
 category_summary
 
+
+#————————————————————————————————
 #data visualization
 
 library(ggplot2)
@@ -132,7 +174,7 @@ category_plot <- category_summary %>%
   )
 
 # Plot
-ggplot(
+category_plot_gg <-ggplot(
   category_plot,
   aes(
     x = fct_reorder(
@@ -206,68 +248,4 @@ ggplot(
     )
   )
 
-#graph2
-install.packages("ggrepel")
 
-category_scatter <- category_summary %>%
-  mutate(
-    category_label = paste0(
-      str_to_title(category),
-      " (n = ", n_events, ")"
-    ),
-    log_avg_attendees = log1p(avg_attendees),
-    log_avg_upvotes = log1p(avg_upvotes)
-  )
-
-ggplot(
-  category_scatter,
-  aes(
-    x = log_avg_attendees,
-    y = log_avg_upvotes
-  )
-) +
-  geom_point(
-    aes(size = n_events),
-    color = "#176B9A",
-    alpha = 0.75
-  ) +
-  
-  geom_text_repel(
-    aes(label = category_label),
-    color = "#174A6E",
-    size = 3.8,
-    fontface = "bold",
-    box.padding = 0.6,
-    point.padding = 0.5,
-    force = 2,
-    max.overlaps = Inf,
-    min.segment.length = 0,
-    segment.color = "gray60"
-  ) +
-  
-  scale_size(
-    range = c(3, 9),
-    guide = "none"
-  ) +
-  
-  labs(
-    title = "User Interest vs. Attendance Across Event Categories",
-    subtitle = "Average values shown on a log(1 + x) scale",
-    x = "Average Attendees [log(1 + x)]",
-    y = "Average Upvotes [log(1 + x)]",
-    caption = "Source: Do215 Top Picks"
-  ) +
-  
-  theme_minimal(base_size = 13) +
-  
-  theme(
-    plot.title = element_text(
-      size = 18,
-      face = "bold"
-    ),
-    plot.subtitle = element_text(
-      size = 11.5,
-      color = "gray40"
-    ),
-    panel.grid.minor = element_blank()
-  )
